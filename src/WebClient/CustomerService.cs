@@ -7,7 +7,7 @@ namespace WebClient
 {
 	internal class CustomerService
 	{
-		internal async Task<Response<long?>> CreateCustomer(CustomerCreateRequest createRequest)
+		internal async Task<HttpResponseMessage> CreateCustomer(CustomerCreateRequest createRequest)
 		{
 			using (HttpClient client = new HttpClient())
 			{
@@ -16,34 +16,32 @@ namespace WebClient
 				request.Content = content;
 				try
 				{
-					using var response = await client.SendAsync(request);
-					var idResponse = await response.Content.ReadFromJsonAsync<Response<long?>>();
-					return idResponse;
+					var response = await client.SendAsync(request);
+					return response;
 				}
 				catch (Exception ex)
 				{
 					Console.WriteLine($"Произошла ошибка при отправке запроса: {ex.Message}");
+					return new HttpResponseMessage { StatusCode = System.Net.HttpStatusCode.InternalServerError, ReasonPhrase = ex.Message };
 				}
-				return new Response<long?>();
 			}
 		}
 
-		internal async Task<Response<Customer>> GetCustomer(long id)
+		internal async Task<HttpResponseMessage> GetCustomer(long id)
 		{
 			using (HttpClient client = new HttpClient())
 			{
 				HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:5001/customers/" + id);
 				try
 				{
-					using var response = await client.SendAsync(request);
-					var customerResponse = await response.Content.ReadFromJsonAsync<Response<Customer>>();
-					return customerResponse;
+					var response = await client.SendAsync(request);
+					return response;
 				}
 				catch (Exception ex)
 				{
 					Console.WriteLine($"Произошла ошибка при отправке запроса: {ex.Message}");
+					return new HttpResponseMessage { StatusCode = System.Net.HttpStatusCode.InternalServerError, ReasonPhrase = ex.Message };
 				}
-				return new Response<Customer>();
 			}
 		}
 	}

@@ -1,13 +1,20 @@
 ﻿using WebApi.Interfaces;
 using WebApi.Models;
 
-namespace WebApi.Services
+namespace WebApi.DbWorkers
 {
 	public class CustomerRepository : ICustomerRepository
 	{
+		private readonly NHibernateHelper _nHibernateHelper;
+
+		public CustomerRepository(NHibernateHelper hibernateHelper)
+		{
+			_nHibernateHelper = hibernateHelper;
+		}
+
 		public long? Create(Customer customer)
 		{
-			using (var session = NHibernateHelper.GetSession())
+			using (var session = _nHibernateHelper.GetSession())
 			{
 				if (session.QueryOver<Customer>().Where(c => c.Id == customer.Id).RowCount() > 0)
 				{
@@ -19,7 +26,7 @@ namespace WebApi.Services
 
 		public Customer Get(long id)
 		{
-			using (var session = NHibernateHelper.GetSession())
+			using (var session = _nHibernateHelper.GetSession())
 			{
 				return session.QueryOver<Customer>().Where(c => c.Id == id).SingleOrDefault();
 			}

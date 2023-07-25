@@ -16,8 +16,19 @@ namespace WebApi.Controllers
 			_customerService = customerService;
 		}
 
+		/// <summary>
+		/// Get customer
+		/// </summary>
+		/// <param name="id">id of customer</param>
+		/// <returns>Customer with id</returns>
+		/// <response code="200">Successfully got</response>
+		/// <response code="404">No such customer found</response>
+		/// <response code="500">Server error</response>
 		[HttpGet("{id:long}")]
-		public async Task<Response<Customer>> GetCustomerAsync([FromRoute] long id)
+		[ProducesResponseType(typeof(Customer), 200)]
+		[ProducesResponseType(404)]
+		[ProducesResponseType(500)]
+		public async Task<ActionResult> GetCustomerAsync([FromRoute] long id)
 		{
 			Console.WriteLine($"Got GET request with id = {id}");
 			try
@@ -25,19 +36,30 @@ namespace WebApi.Controllers
 				var customer = await _customerService.GetCustomer(id);
 				if (customer == null)
 				{
-					return new Response<Customer> { Result = 404, Error = "Не найден пользователь с таким id" };
+					return NotFound("РќРµ РЅР°Р№РґРµРЅ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ СЃ С‚Р°РєРёРј id");
 				}
 
-				return new Response<Customer> { Result = 200, Data = customer };
+				return Ok(customer);
 			}
 			catch (Exception ex)
 			{
-				return new Response<Customer> { Result = 500, Error = ex.Message};
+				return StatusCode(500, ex.Message);
 			}
 		}
 
+		/// <summary>
+		/// Create new customer
+		/// </summary>
+		/// <param name="customer">Customer to create</param>
+		/// <returns>id of customer entity in db</returns>
+		/// <response code="201">Successfully created</response>
+		/// <response code="409">Customer with this id already exists</response>
+		/// <response code="500">Server error</response>
 		[HttpPost]
-		public async Task<Response<long?>> CreateCustomerAsync([FromBody] Customer customer)
+		[ProducesResponseType(typeof(long), 201)]
+		[ProducesResponseType(409)]
+		[ProducesResponseType(500)]
+		public async Task<ActionResult> CreateCustomerAsync([FromBody] Customer customer)
 		{
 			Console.WriteLine($"Got POST request with body = {customer}");
 			try
@@ -45,13 +67,14 @@ namespace WebApi.Controllers
 				var id = await _customerService.CreateCustomer(customer);
 				if (id == null)
 				{
-					return new Response<long?> { Result = 409, Error = "Пользователь с таким id уже есть в БД" };
+					return Conflict("РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ СЃ С‚Р°РєРёРј id СѓР¶Рµ РµСЃС‚СЊ РІ Р‘Р”");
 				}
-				return new Response<long?> { Result = 201, Data = id };
+
+				return StatusCode(201, id);
 			}
 			catch (Exception ex)
 			{
-				return new Response<long?> { Result = 500, Error = ex.Message };
+				return StatusCode(500, ex.Message);
 			}
 		}
 	}

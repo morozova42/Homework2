@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -24,32 +25,33 @@ namespace WebClient
 				command = Console.ReadLine();
 				if (long.TryParse(command, out long id))
 				{
-					var customerResponse = customerService.GetCustomer(id).Result;
-					if (customerResponse.Result != StatusOk)
+					using var customerResponse = customerService.GetCustomer(id).Result;
+					if (customerResponse.StatusCode != System.Net.HttpStatusCode.OK)
 					{
 						Console.ForegroundColor = ConsoleColor.Red;
-						Console.WriteLine(customerResponse.Error);
+						Console.WriteLine($"{customerResponse.ReasonPhrase}: {customerResponse.Content.ReadAsStringAsync().Result}");
 					}
 					else
 					{
-						Console.WriteLine(customerResponse.Data);
+						Console.WriteLine(customerResponse.Content.ReadFromJsonAsync<Customer>().Result);
 					}
 					Console.ResetColor();
 				}
 				else if (command == "random")
 				{
 					CustomerCreateRequest newCustomer = RandomCustomer();
-					var idResponse = customerService.CreateCustomer(newCustomer).Result;
-					if (idResponse.Result != StatusCreated)
+					using var idResponse = customerService.CreateCustomer(newCustomer).Result;
+					if (idResponse.StatusCode != System.Net.HttpStatusCode.Created)
 					{
 						Console.ForegroundColor = ConsoleColor.Red;
-						Console.WriteLine(idResponse.Error);
+						Console.WriteLine($"{idResponse.ReasonPhrase}: {idResponse.Content.ReadAsStringAsync().Result}");
 					}
 					else
 					{
-						Console.WriteLine(idResponse.Data);
-						var customerResponse = customerService.GetCustomer(idResponse.Data.Value).Result;
-						Console.WriteLine(customerResponse.Data);
+						var newId = idResponse.Content.ReadAsStringAsync().Result;
+						Console.WriteLine(newId);
+						var customerResponse = customerService.GetCustomer(long.Parse(newId)).Result;
+						Console.WriteLine(customerResponse.Content.ReadFromJsonAsync<Customer>().Result);
 					}
 					Console.ResetColor();
 				}
@@ -57,17 +59,18 @@ namespace WebClient
 				{
 					CustomerCreateRequest newCustomer = RandomCustomer();
 					newCustomer.Id = ExistingId;
-					var idResponse = customerService.CreateCustomer(newCustomer).Result;
-					if (idResponse.Result != StatusCreated)
+					using var idResponse = customerService.CreateCustomer(newCustomer).Result;
+					if (idResponse.StatusCode != System.Net.HttpStatusCode.Created)
 					{
 						Console.ForegroundColor = ConsoleColor.Red;
-						Console.WriteLine(idResponse.Error);
+						Console.WriteLine($"{idResponse.ReasonPhrase}: {idResponse.Content.ReadAsStringAsync().Result}");
 					}
 					else
 					{
-						Console.WriteLine(idResponse.Data);
-						var customerResponse = customerService.GetCustomer(idResponse.Data.Value).Result;
-						Console.WriteLine(customerResponse.Data);
+						var newId = idResponse.Content.ReadAsStringAsync().Result;
+						Console.WriteLine(newId);
+						var customerResponse = customerService.GetCustomer(long.Parse(newId)).Result;
+						Console.WriteLine(customerResponse.Content.ReadFromJsonAsync<Customer>().Result);
 					}
 					Console.ResetColor();
 				}
